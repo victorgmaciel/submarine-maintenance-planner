@@ -1,4 +1,3 @@
-import React from "react";
 import { AlertTriangle } from "lucide-react";
 
 const ConflictList = ({ conflicts, tasks }) => {
@@ -14,40 +13,22 @@ const ConflictList = ({ conflicts, tasks }) => {
             const t1 = tasks.find((t) => t.id === conflict.task1);
             const t2 = tasks.find((t) => t.id === conflict.task2);
             return (
-              <div
-                key={idx}
-                className="bg-slate-900/50 rounded-lg p-3 border border-red-500/30"
-              >
+              <div key={idx} className="bg-slate-900/50 rounded-lg p-3 border border-red-500/30">
                 <div className="flex items-start gap-2">
-                  <div
-                    className={`mt-0.5 ${
-                      conflict.severity === "critical"
-                        ? "text-red-400"
-                        : "text-yellow-400"
-                    }`}
-                  >
+                  <div className={`mt-0.5 ${conflict.severity === "critical" ? "text-red-400" : "text-yellow-400"}`}>
                     {conflict.severity === "critical" ? "⛔" : "⚠️"}
                   </div>
                   <div className="flex-1">
                     <div className="font-semibold text-red-300 uppercase text-xs mb-1">
-                      {conflict.severity === "critical"
-                        ? "CRITICAL"
-                        : "WARNING"}
+                      {conflict.severity === "critical" ? "CRITICAL" : "WARNING"}
                     </div>
                     <div className="text-gray-300 text-xs leading-relaxed">
-                      <div className="mb-1">
-                        {t1?.name} ({t1?.division})
-                      </div>
+                      <div className="mb-1">{t1?.name} ({t1?.division})</div>
                       <div className="text-gray-500">conflicts with</div>
-                      <div className="mt-1">
-                        {t2?.name} ({t2?.division})
-                      </div>
+                      <div className="mt-1">{t2?.name} ({t2?.division})</div>
                     </div>
                     <div className="mt-2 px-2 py-1 bg-slate-800 rounded text-xs text-gray-400">
-                      System:{" "}
-                      <span className="text-orange-400 font-semibold capitalize">
-                        {conflict.resource}
-                      </span>
+                      System: <span className="text-orange-400 font-semibold capitalize">{conflict.resource}</span>
                     </div>
                   </div>
                 </div>

@@ -1,31 +1,21 @@
-import React from "react";
 import { Users } from "lucide-react";
 
 const DivisionStats = ({ divisions, divisionColors, tasks }) => {
-  const getDivisionStats = () => {
-    const stats = {};
-    divisions.forEach((div) => {
-      const divTasks = tasks.filter((t) => t.division === div);
-      const totalCrew = divTasks.reduce(
-        (sum, t) => sum + t.requirements.crew,
-        0
-      );
-      stats[div] = { tasks: divTasks.length, crew: totalCrew };
-    });
-    return stats;
-  };
-
-  const stats = getDivisionStats();
+  const stats = {};
+  divisions.forEach((div) => {
+    const divTasks = tasks.filter((t) => t.division === div);
+    stats[div] = {
+      tasks: divTasks.length,
+      crew: divTasks.reduce((sum, t) => sum + t.requirements.crew, 0),
+    };
+  });
 
   return (
     <div className="mb-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
       {divisions.map((div) => {
         const colors = divisionColors[div];
         return (
-          <div
-            key={div}
-            className={`${colors.bg} border ${colors.border} rounded-lg p-3`}
-          >
+          <div key={div} className={`${colors.bg} border ${colors.border} rounded-lg p-3`}>
             <div className="flex items-center gap-2 mb-1">
               <Users className={`w-4 h-4 ${colors.text}`} />
               <h3 className={`font-bold text-sm ${colors.text}`}>{div}</h3>

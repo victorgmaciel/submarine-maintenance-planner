@@ -1,4 +1,3 @@
-import React from "react";
 import { Lock } from "lucide-react";
 
 const LoginScreen = ({ loginForm, setLoginForm, handleLogin }) => {
@@ -15,35 +14,26 @@ const LoginScreen = ({ loginForm, setLoginForm, handleLogin }) => {
             Submarine Maintenance Planner
           </h1>
           <p className="text-center text-gray-400 text-sm mb-8">
-            Secure Access - Authorized Personnel Only
+            Secure Access — Authorized Personnel Only
           </p>
-
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Username
-              </label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Username</label>
               <input
                 type="text"
                 value={loginForm.username}
-                onChange={(e) =>
-                  setLoginForm({ ...loginForm, username: e.target.value })
-                }
+                onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
                 className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                 placeholder="Enter username"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Password
-              </label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
               <input
                 type="password"
                 value={loginForm.password}
-                onChange={(e) =>
-                  setLoginForm({ ...loginForm, password: e.target.value })
-                }
-                onKeyPress={(e) => e.key === "Enter" && handleLogin()}
+                onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                onKeyDown={(e) => e.key === "Enter" && handleLogin()}
                 className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                 placeholder="Enter password"
               />
@@ -55,20 +45,11 @@ const LoginScreen = ({ loginForm, setLoginForm, handleLogin }) => {
               Login
             </button>
           </div>
-
           <div className="mt-6 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
-            <p className="text-xs text-gray-400 mb-2 font-semibold">
-              Demo Credentials:
-            </p>
-            <p className="text-xs text-gray-300">
-              Username: <span className="font-mono">demo</span>
-            </p>
-            <p className="text-xs text-gray-300">
-              Password: <span className="font-mono">demo</span>
-            </p>
-            <p className="text-xs text-gray-400 mt-2">
-              Other users: smith, jones, davis (all use demo123)
-            </p>
+            <p className="text-xs text-gray-400 mb-2 font-semibold">Demo Credentials:</p>
+            <p className="text-xs text-gray-300">Username: <span className="font-mono">demo</span></p>
+            <p className="text-xs text-gray-300">Password: <span className="font-mono">demo</span></p>
+            <p className="text-xs text-gray-400 mt-2">Other users: smith, jones, davis (all use demo123)</p>
           </div>
         </div>
       </div>

@@ -13,10 +13,12 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.80.0",
     "init": "^0.1.2",
     "lucide-react": "^0.554.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "react-router-dom": "^7.13.2"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.1.1",

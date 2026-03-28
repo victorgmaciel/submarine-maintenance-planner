@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 
 // Import components
 import LoginScreen from "./components/LoginScreen";
@@ -9,15 +9,19 @@ import SubmarineSystemDiagram from "./components/SubmarineSystemDiagram";
 import ConflictList from "./components/ConflictList";
 import GanttTimeline from "./components/GannttTimeline";
 import AddTaskModal from "./components/AddTaskModal";
+import DivisionTracker from "./components/DivisionTracker";
+import OfficerBriefing from "./components/OfficerBriefing";
+import ShipmateChat from "./components/ShipmateChat";
+import ShoreServices from "./components/ShoreServices";
 
 // Import data
 import { users } from "./data/users";
-import { initialTasks } from "./data/initialTasks";
+import { vesselData } from "./data/vesselData";
 import {
   divisions,
   resources,
   divisionColors,
-  dailyWatchInfo,
+  vessels,
 } from "./data/constants";
 
 // Import utilities
@@ -33,8 +37,10 @@ const SubmarineMaintenancePlanner = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loginForm, setLoginForm] = useState({ username: "", password: "" });
 
-  // Task management state
-  const [tasks, setTasks] = useState(initialTasks);
+  // Task management state — keyed by vessel ID
+  const [allVesselTasks, setAllVesselTasks] = useState(
+    () => Object.fromEntries(Object.entries(vesselData).map(([k, v]) => [k, v.tasks]))
+  );
   const [showAddTask, setShowAddTask] = useState(false);
   const [selectedDivision, setSelectedDivision] = useState("All");
   const [newTask, setNewTask] = useState({
@@ -54,6 +60,14 @@ const SubmarineMaintenancePlanner = () => {
   // View state
   const [currentDay, setCurrentDay] = useState(1);
   const [viewDays, setViewDays] = useState(30);
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [selectedVessel, setSelectedVessel] = useState(vessels[0]);
+  const [shipmateOpen, setShipmateOpen] = useState(false);
+
+  // Derived per-vessel data (must come after selectedVessel is declared)
+  const vesselId = selectedVessel?.id;
+  const tasks = allVesselTasks[vesselId] ?? [];
+  const watchInfo = vesselData[vesselId]?.watchInfo ?? {};
 
   // Authentication handlers
   const handleLogin = () => {
@@ -73,10 +87,17 @@ const SubmarineMaintenancePlanner = () => {
   };
 
   // Task management handlers
+  const setVesselTasks = (updater) => {
+    setAllVesselTasks((prev) => ({
+      ...prev,
+      [vesselId]: typeof updater === "function" ? updater(prev[vesselId] ?? []) : updater,
+    }));
+  };
+
   const addTask = () => {
     if (newTask.name.trim()) {
-      setTasks([
-        ...tasks,
+      setVesselTasks((prev) => [
+        ...prev,
         {
           ...newTask,
           id: Date.now(),
@@ -107,7 +128,7 @@ const SubmarineMaintenancePlanner = () => {
   const deleteTask = (id) => {
     const task = tasks.find((t) => t.id === id);
     if (currentUser.role === "admin" || task.createdBy === currentUser.name) {
-      setTasks(tasks.filter((t) => t.id !== id));
+      setVesselTasks((prev) => prev.filter((t) => t.id !== id));
     } else {
       alert("You can only delete your own tasks");
     }
@@ -146,43 +167,67 @@ const SubmarineMaintenancePlanner = () => {
           currentUser={currentUser}
           setShowAddTask={setShowAddTask}
           handleLogout={handleLogout}
+          onOpenShipmate={() => setShipmateOpen(true)}
+          vessels={vessels}
+          selectedVessel={selectedVessel}
+          setSelectedVessel={setSelectedVessel}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
         />
 
-        <DailyWatchBill
-          currentDay={currentDay}
-          setCurrentDay={setCurrentDay}
-          viewDays={viewDays}
-          dailyInfo={dailyWatchInfo}
-          tasks={tasks}
-          divisionColors={divisionColors}
-          getTaskConflicts={getTaskConflictsWrapper}
-        />
+        {activeTab === "dashboard" && (
+          <>
+            <OfficerBriefing currentDay={currentDay} />
 
-        <DivisionStats
-          divisions={divisions}
-          divisionColors={divisionColors}
-          tasks={tasks}
-        />
+            <DailyWatchBill
+              currentDay={currentDay}
+              setCurrentDay={setCurrentDay}
+              viewDays={viewDays}
+              dailyInfo={watchInfo}
+              tasks={tasks}
+              divisionColors={divisionColors}
+              getTaskConflicts={getTaskConflictsWrapper}
+            />
 
-        {/* System Status and Conflicts */}
-        <div className="mb-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <SubmarineSystemDiagram tasks={tasks} viewDays={viewDays} />
+            <DivisionStats
+              divisions={divisions}
+              divisionColors={divisionColors}
+              tasks={tasks}
+            />
 
-          <ConflictList conflicts={conflicts} tasks={tasks} />
-        </div>
+            {/* System Status and Conflicts */}
+            <div className="mb-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <SubmarineSystemDiagram tasks={tasks} viewDays={viewDays} />
+              <ConflictList conflicts={conflicts} tasks={tasks} />
+            </div>
 
-        <GanttTimeline
-          filteredTasks={filteredTasks}
-          selectedDivision={selectedDivision}
-          setSelectedDivision={setSelectedDivision}
-          divisions={divisions}
-          viewDays={viewDays}
-          setViewDays={setViewDays}
-          divisionColors={divisionColors}
-          getTaskConflicts={getTaskConflictsWrapper}
-          getConflictColor={getConflictColorWrapper}
-          deleteTask={deleteTask}
-        />
+            <GanttTimeline
+              filteredTasks={filteredTasks}
+              selectedDivision={selectedDivision}
+              setSelectedDivision={setSelectedDivision}
+              divisions={divisions}
+              viewDays={viewDays}
+              setViewDays={setViewDays}
+              divisionColors={divisionColors}
+              getTaskConflicts={getTaskConflictsWrapper}
+              getConflictColor={getConflictColorWrapper}
+              deleteTask={deleteTask}
+            />
+          </>
+        )}
+
+        {activeTab === "divisions" && (
+          <DivisionTracker
+            divisions={divisions}
+            tasks={tasks}
+            divisionColors={divisionColors}
+            currentDay={currentDay}
+            setCurrentDay={setCurrentDay}
+            viewDays={viewDays}
+          />
+        )}
+
+        {activeTab === "contacts" && <ShoreServices />}
 
         <AddTaskModal
           showAddTask={showAddTask}
@@ -194,6 +239,14 @@ const SubmarineMaintenancePlanner = () => {
           resources={resources}
           addTask={addTask}
         />
+
+        {shipmateOpen && (
+          <ShipmateChat
+            onClose={() => setShipmateOpen(false)}
+            selectedVessel={selectedVessel}
+            tasks={tasks}
+          />
+        )}
       </div>
     </div>
   );

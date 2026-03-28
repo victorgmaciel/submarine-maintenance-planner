@@ -1,5 +1,3 @@
-import React from "react";
-import { Plus } from "lucide-react";
 
 const AddTaskModal = ({
   showAddTask,
@@ -19,9 +17,7 @@ const AddTaskModal = ({
         <h2 className="text-xl font-bold mb-4">Add Maintenance Evolution</h2>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm mb-2 text-gray-300">
-              Evolution Name
-            </label>
+            <label className="block text-sm mb-2 text-gray-300">Evolution Name</label>
             <input
               type="text"
               value={newTask.name}
@@ -33,19 +29,13 @@ const AddTaskModal = ({
           <div className="grid grid-cols-2 gap-4">
             {currentUser.role === "admin" && (
               <div>
-                <label className="block text-sm mb-2 text-gray-300">
-                  Division
-                </label>
+                <label className="block text-sm mb-2 text-gray-300">Division</label>
                 <select
                   value={newTask.division}
-                  onChange={(e) =>
-                    setNewTask({ ...newTask, division: e.target.value })
-                  }
+                  onChange={(e) => setNewTask({ ...newTask, division: e.target.value })}
                   className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2"
                 >
-                  {divisions.map((div) => (
-                    <option key={div}>{div}</option>
-                  ))}
+                  {divisions.map((div) => <option key={div}>{div}</option>)}
                 </select>
               </div>
             )}
@@ -53,100 +43,45 @@ const AddTaskModal = ({
               <label className="block text-sm mb-2 text-gray-300">System</label>
               <select
                 value={newTask.system}
-                onChange={(e) =>
-                  setNewTask({ ...newTask, system: e.target.value })
-                }
+                onChange={(e) => setNewTask({ ...newTask, system: e.target.value })}
                 className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2"
               >
-                <option>General</option>
-                <option>Hydraulics</option>
-                <option>Control Surfaces</option>
-                <option>Ballast</option>
-                <option>Electrical</option>
-                <option>Weapons</option>
-                <option>Reactor</option>
+                {["General","Hydraulics","Control Surfaces","Ballast","Electrical","Weapons","Reactor","Sonar"].map((s) => (
+                  <option key={s}>{s}</option>
+                ))}
               </select>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm mb-2 text-gray-300">
-                Start Day
-              </label>
-              <input
-                type="number"
-                value={newTask.startDay}
-                onChange={(e) =>
-                  setNewTask({
-                    ...newTask,
-                    startDay: parseInt(e.target.value) || 1,
-                  })
-                }
-                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2"
-                min="1"
-              />
+              <label className="block text-sm mb-2 text-gray-300">Start Day</label>
+              <input type="number" value={newTask.startDay}
+                onChange={(e) => setNewTask({ ...newTask, startDay: parseInt(e.target.value) || 1 })}
+                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2" min="1" />
             </div>
             <div>
-              <label className="block text-sm mb-2 text-gray-300">
-                Duration (days)
-              </label>
-              <input
-                type="number"
-                value={newTask.duration}
-                onChange={(e) =>
-                  setNewTask({
-                    ...newTask,
-                    duration: parseInt(e.target.value) || 1,
-                  })
-                }
-                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2"
-                min="1"
-              />
+              <label className="block text-sm mb-2 text-gray-300">Duration (days)</label>
+              <input type="number" value={newTask.duration}
+                onChange={(e) => setNewTask({ ...newTask, duration: parseInt(e.target.value) || 1 })}
+                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2" min="1" />
             </div>
             <div>
-              <label className="block text-sm mb-2 text-gray-300">
-                Crew Size
-              </label>
-              <input
-                type="number"
-                value={newTask.requirements.crew}
-                onChange={(e) =>
-                  setNewTask({
-                    ...newTask,
-                    requirements: {
-                      ...newTask.requirements,
-                      crew: parseInt(e.target.value) || 1,
-                    },
-                  })
-                }
-                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2"
-                min="1"
-              />
+              <label className="block text-sm mb-2 text-gray-300">Crew Size</label>
+              <input type="number" value={newTask.requirements.crew}
+                onChange={(e) => setNewTask({ ...newTask, requirements: { ...newTask.requirements, crew: parseInt(e.target.value) || 1 } })}
+                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2" min="1" />
             </div>
           </div>
           <div>
-            <label className="block text-sm mb-2 text-gray-300">
-              Resource Requirements
-            </label>
+            <label className="block text-sm mb-2 text-gray-300">Resource Requirements</label>
             <div className="grid grid-cols-2 gap-3">
               {resources.map((resource) => (
-                <div
-                  key={resource}
-                  className="bg-slate-700/50 rounded-lg p-3 border border-slate-600"
-                >
+                <div key={resource} className="bg-slate-700/50 rounded-lg p-3 border border-slate-600">
                   <div className="flex items-center justify-between">
                     <span className="text-sm capitalize">{resource}</span>
                     <select
                       value={newTask.requirements[resource] || "none"}
-                      onChange={(e) =>
-                        setNewTask({
-                          ...newTask,
-                          requirements: {
-                            ...newTask.requirements,
-                            [resource]: e.target.value,
-                          },
-                        })
-                      }
+                      onChange={(e) => setNewTask({ ...newTask, requirements: { ...newTask.requirements, [resource]: e.target.value } })}
                       className="bg-slate-600 border border-slate-500 rounded px-2 py-1 text-sm"
                     >
                       <option value="none">None</option>
@@ -161,16 +96,10 @@ const AddTaskModal = ({
           </div>
         </div>
         <div className="flex gap-3 mt-6">
-          <button
-            onClick={addTask}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition font-medium"
-          >
+          <button onClick={addTask} className="flex-1 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition font-medium">
             Add Evolution
           </button>
-          <button
-            onClick={() => setShowAddTask(false)}
-            className="flex-1 bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg transition"
-          >
+          <button onClick={() => setShowAddTask(false)} className="flex-1 bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg transition">
             Cancel
           </button>
         </div>

@@ -1,737 +1,156 @@
-import React from "react";
 import { Wrench } from "lucide-react";
 
+const SYSTEMS = [
+  { key: "weapons",    label: "WEAPONS",    sub: "Mk 48 ADCAP",       check: (t) => t.requirements.weapons === "shutdown" },
+  { key: "electrical", label: "ELECTRICAL", sub: "Main Distribution", check: (t) => t.requirements.electrical === "shutdown" },
+  { key: "hydraulics", label: "HYDRAULICS", sub: "Control Surfaces",  check: (t) => t.requirements.hydraulics === "shutdown" },
+  { key: "reactor",    label: "REACTOR",    sub: "S9G PWR",           check: (t) => t.requirements.reactor === "shutdown" },
+  { key: "air",        label: "BALLAST",    sub: "Emergency Blow",    check: (t) => t.requirements.air === "shutdown" },
+];
+
 const SubmarineSystemDiagram = ({ tasks, viewDays }) => {
+  const isShutdown = (checker) =>
+    tasks.some((t) => t.startDay <= viewDays && t.startDay + t.duration > 1 && checker(t));
+
   return (
     <div className="lg:col-span-2 bg-slate-800 border border-slate-700 rounded-lg p-4">
-      <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+      <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
         <Wrench className="w-5 h-5 text-blue-400" />
-        U.S.S. Rocinante Status
+        System Status
       </h3>
-      <div className="relative bg-gradient-to-b from-slate-900 to-slate-800 rounded-lg p-8 border border-slate-700">
-        {/* Submarine SVG Diagram */}
-        <svg viewBox="0 0 1200 400" className="w-full h-auto">
+
+      {/* Submarine SVG */}
+      <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700 mb-4">
+        <svg viewBox="0 0 1100 280" className="w-full h-auto">
           <defs>
-            <linearGradient id="hullGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#475569" />
-              <stop offset="50%" stopColor="#334155" />
+            <linearGradient id="hullTop" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="40%" stopColor="#475569" />
               <stop offset="100%" stopColor="#1e293b" />
             </linearGradient>
-            <linearGradient id="darkHull" x1="0%" y1="0%" x2="0%" y2="100%">
+            <linearGradient id="hullBot" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#1e293b" />
-              <stop offset="50%" stopColor="#0f172a" />
-              <stop offset="100%" stopColor="#020617" />
+              <stop offset="100%" stopColor="#0f172a" />
             </linearGradient>
+            <linearGradient id="sailGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#334155" />
+            </linearGradient>
+            <filter id="glow-green">
+              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+              <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="glow-red">
+              <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+              <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
           </defs>
 
-          {/* Main Hull */}
-          <ellipse
-            cx="600"
-            cy="200"
-            rx="480"
-            ry="75"
-            fill="url(#hullGradient)"
-            stroke="#64748b"
-            strokeWidth="3"
-          />
-          <ellipse
-            cx="600"
-            cy="200"
-            rx="480"
-            ry="65"
-            fill="none"
-            stroke="#475569"
-            strokeWidth="1"
-            opacity="0.5"
-          />
-          <ellipse
-            cx="600"
-            cy="200"
-            rx="480"
-            ry="55"
-            fill="none"
-            stroke="#334155"
-            strokeWidth="1"
-            opacity="0.3"
-          />
+          {/* === HULL BODY === */}
+          {/* Bottom shadow */}
+          <ellipse cx="545" cy="158" rx="430" ry="62" fill="#0a0f1a" opacity="0.5"/>
+          {/* Main hull upper */}
+          <path d="M 115 140 Q 545 60 975 140 L 975 158 Q 545 78 115 158 Z" fill="url(#hullTop)"/>
+          {/* Main hull lower */}
+          <path d="M 115 158 Q 545 238 975 158 L 975 175 Q 545 255 115 175 Z" fill="url(#hullBot)"/>
+          {/* Hull centerline ring */}
+          <ellipse cx="545" cy="158" rx="430" ry="58" fill="none" stroke="#475569" strokeWidth="2.5"/>
+          {/* Inner hull detail lines */}
+          <ellipse cx="545" cy="158" rx="415" ry="50" fill="none" stroke="#334155" strokeWidth="1" opacity="0.6"/>
 
-          {/* Bow */}
-          <path
-            d="M 120 200 Q 80 200 60 200 Q 60 180 75 170 L 120 175 Z"
-            fill="url(#hullGradient)"
-            stroke="#64748b"
-            strokeWidth="3"
-          />
-          <path
-            d="M 120 200 Q 80 200 60 200 Q 60 220 75 230 L 120 225 Z"
-            fill="url(#darkHull)"
-            stroke="#64748b"
-            strokeWidth="3"
-          />
-          <path d="M 120 175 L 120 225" stroke="#475569" strokeWidth="2" />
+          {/* === BOW DOME === */}
+          <ellipse cx="115" cy="158" rx="38" ry="55" fill="url(#hullTop)" stroke="#64748b" strokeWidth="2"/>
+          <ellipse cx="108" cy="158" rx="22" ry="38" fill="#1e293b" stroke="#475569" strokeWidth="1.5" opacity="0.8"/>
+          {/* Bow sonar dome detail */}
+          <ellipse cx="102" cy="158" rx="14" ry="26" fill="#334155" opacity="0.5"/>
 
-          {/* Sail/Conning Tower */}
-          <rect
-            x="500"
-            y="100"
-            width="160"
-            height="100"
-            rx="10"
-            fill="url(#hullGradient)"
-            stroke="#64748b"
-            strokeWidth="3"
-          />
-          <rect
-            x="530"
-            y="70"
-            width="100"
-            height="35"
-            rx="8"
-            fill="#334155"
-            stroke="#64748b"
-            strokeWidth="2"
-          />
-          <line
-            x1="520"
-            y1="120"
-            x2="520"
-            y2="190"
-            stroke="#475569"
-            strokeWidth="2"
-          />
-          <line
-            x1="640"
-            y1="120"
-            x2="640"
-            y2="190"
-            stroke="#475569"
-            strokeWidth="2"
-          />
-          <rect
-            x="545"
-            y="110"
-            width="70"
-            height="15"
-            rx="3"
-            fill="#1e293b"
-            stroke="#475569"
-            strokeWidth="1"
-          />
+          {/* === STERN / PUMP-JET === */}
+          {/* Stern taper */}
+          <path d="M 975 140 Q 1020 145 1040 155 L 1040 161 Q 1020 171 975 175 Z" fill="url(#hullTop)" stroke="#64748b" strokeWidth="2"/>
+          {/* Pump-jet housing */}
+          <ellipse cx="1055" cy="158" rx="30" ry="38" fill="#1e293b" stroke="#64748b" strokeWidth="2.5"/>
+          <ellipse cx="1055" cy="158" rx="18" ry="24" fill="#0f172a" stroke="#475569" strokeWidth="2"/>
+          {/* Rotor blades (simplified) */}
+          {[0,45,90,135].map((angle, i) => (
+            <line key={i}
+              x1={1055 + 6 * Math.cos((angle * Math.PI) / 180)}
+              y1={158  + 6 * Math.sin((angle * Math.PI) / 180)}
+              x2={1055 + 17 * Math.cos((angle * Math.PI) / 180)}
+              y2={158  + 17 * Math.sin((angle * Math.PI) / 180)}
+              stroke="#64748b" strokeWidth="3" strokeLinecap="round"
+            />
+          ))}
+          <circle cx="1055" cy="158" r="5" fill="#475569"/>
 
-          {/* Periscopes */}
-          <line
-            x1="545"
-            y1="70"
-            x2="545"
-            y2="30"
-            stroke="#64748b"
-            strokeWidth="3"
-          />
-          <line
-            x1="580"
-            y1="70"
-            x2="580"
-            y2="40"
-            stroke="#64748b"
-            strokeWidth="3"
-          />
-          <line
-            x1="615"
-            y1="70"
-            x2="615"
-            y2="35"
-            stroke="#64748b"
-            strokeWidth="3"
-          />
-          <circle cx="545" cy="30" r="4" fill="#64748b" />
-          <circle cx="580" cy="40" r="4" fill="#64748b" />
-          <circle cx="615" cy="35" r="4" fill="#64748b" />
+          {/* === CONTROL SURFACES === */}
+          {/* Stern planes — X-form */}
+          <line x1="985" y1="130" x2="1010" y2="100" stroke="#64748b" strokeWidth="5" strokeLinecap="round"/>
+          <line x1="985" y1="186" x2="1010" y2="216" stroke="#64748b" strokeWidth="5" strokeLinecap="round"/>
+          <line x1="985" y1="130" x2="1010" y2="216" stroke="#475569" strokeWidth="3" strokeLinecap="round" opacity="0.5"/>
+          <line x1="985" y1="186" x2="1010" y2="100" stroke="#475569" strokeWidth="3" strokeLinecap="round" opacity="0.5"/>
 
-          {/* Stern */}
-          <path
-            d="M 1080 200 L 1140 185 L 1150 200 L 1140 215 Z"
-            fill="url(#darkHull)"
-            stroke="#64748b"
-            strokeWidth="3"
-          />
-
-          {/* Pump Jet */}
-          <ellipse
-            cx="1145"
-            cy="200"
-            rx="25"
-            ry="28"
-            fill="none"
-            stroke="#64748b"
-            strokeWidth="3"
-          />
-          <circle
-            cx="1145"
-            cy="200"
-            r="15"
-            fill="#0f172a"
-            stroke="#64748b"
-            strokeWidth="2"
-          />
-          <line
-            x1="1130"
-            y1="200"
-            x2="1160"
-            y2="200"
-            stroke="#64748b"
-            strokeWidth="2"
-          />
-          <line
-            x1="1145"
-            y1="185"
-            x2="1145"
-            y2="215"
-            stroke="#64748b"
-            strokeWidth="2"
-          />
-
-          {/* Control Surfaces */}
-          <line
-            x1="1070"
-            y1="160"
-            x2="1030"
-            y2="115"
-            stroke="#64748b"
-            strokeWidth="4"
-          />
-          <line
-            x1="1070"
-            y1="240"
-            x2="1030"
-            y2="285"
-            stroke="#64748b"
-            strokeWidth="4"
-          />
-          <line
-            x1="1070"
-            y1="160"
-            x2="1030"
-            y2="285"
-            stroke="#64748b"
-            strokeWidth="4"
-            opacity="0.6"
-          />
-          <line
-            x1="1070"
-            y1="240"
-            x2="1030"
-            y2="115"
-            stroke="#64748b"
-            strokeWidth="4"
-            opacity="0.6"
-          />
-
+          {/* === SAIL / CONNING TOWER === */}
+          <path d="M 440 140 L 440 70 Q 440 58 452 58 L 620 58 Q 632 58 632 70 L 632 140 Z"
+            fill="url(#sailGrad)" stroke="#64748b" strokeWidth="2.5"/>
+          {/* Sail top cap */}
+          <rect x="455" y="42" width="152" height="20" rx="6" fill="#475569" stroke="#64748b" strokeWidth="1.5"/>
+          {/* Window strip on sail */}
+          <rect x="465" y="90" width="112" height="12" rx="3" fill="#1e293b" stroke="#475569" strokeWidth="1"/>
+          {[480,510,540,570,600].map((x, i) => (
+            <rect key={i} x={x} y={93} width="12" height="6" rx="1" fill="#334155" stroke="#64748b" strokeWidth="0.5"/>
+          ))}
           {/* Fairwater planes */}
-          <rect
-            x="480"
-            y="145"
-            width="20"
-            height="8"
-            rx="2"
-            fill="#334155"
-            stroke="#64748b"
-            strokeWidth="2"
-          />
-          <rect
-            x="660"
-            y="145"
-            width="20"
-            height="8"
-            rx="2"
-            fill="#334155"
-            stroke="#64748b"
-            strokeWidth="2"
-          />
+          <rect x="420" y="118" width="24" height="7" rx="2" fill="#475569" stroke="#64748b" strokeWidth="1.5"/>
+          <rect x="628" y="118" width="24" height="7" rx="2" fill="#475569" stroke="#64748b" strokeWidth="1.5"/>
 
-          {/* WEAPONS */}
-          <g>
-            <circle
-              cx="160"
-              cy="185"
-              r="10"
-              fill={
-                tasks.some((t) => {
-                  const isActive =
-                    t.startDay <= viewDays && t.startDay + t.duration > 1;
-                  return isActive && t.requirements.weapons === "shutdown";
-                })
-                  ? "#ef4444"
-                  : "#22c55e"
-              }
-              stroke="#fff"
-              strokeWidth="2.5"
-            />
-            <circle
-              cx="160"
-              cy="205"
-              r="10"
-              fill={
-                tasks.some((t) => {
-                  const isActive =
-                    t.startDay <= viewDays && t.startDay + t.duration > 1;
-                  return isActive && t.requirements.weapons === "shutdown";
-                })
-                  ? "#ef4444"
-                  : "#22c55e"
-              }
-              stroke="#fff"
-              strokeWidth="2.5"
-            />
-            <circle
-              cx="160"
-              cy="215"
-              r="10"
-              fill={
-                tasks.some((t) => {
-                  const isActive =
-                    t.startDay <= viewDays && t.startDay + t.duration > 1;
-                  return isActive && t.requirements.weapons === "shutdown";
-                })
-                  ? "#ef4444"
-                  : "#22c55e"
-              }
-              stroke="#fff"
-              strokeWidth="2.5"
-            />
-            <line
-              x1="160"
-              y1="175"
-              x2="160"
-              y2="60"
-              stroke="#94a3b8"
-              strokeWidth="2"
-              strokeDasharray="4,4"
-            />
-            <text
-              x="160"
-              y="45"
-              textAnchor="middle"
-              fill="#e2e8f0"
-              fontSize="14"
-              fontWeight="bold"
-            >
-              WEAPONS
-            </text>
-            <text
-              x="160"
-              y="62"
-              textAnchor="middle"
-              fill="#94a3b8"
-              fontSize="11"
-            >
-              Mk 48 Torpedoes
-            </text>
-          </g>
+          {/* === MASTS (Periscopes / Antennas) === */}
+          {[{x:490,h:38},{x:530,h:30},{x:580,h:42},{x:620,h:28}].map((m, i) => (
+            <g key={i}>
+              <line x1={m.x} y1={42} x2={m.x} y2={42-m.h} stroke="#64748b" strokeWidth={i%2===0?3:2}/>
+              <circle cx={m.x} cy={42-m.h} r={i%2===0?4:3} fill={i===2?"#60a5fa":"#64748b"} stroke="#94a3b8" strokeWidth="1"/>
+            </g>
+          ))}
 
-          {/* SONAR */}
-          <g>
-            <rect
-              x="85"
-              y="193"
-              width="40"
-              height="14"
-              rx="3"
-              fill="#475569"
-              stroke="#64748b"
-              strokeWidth="2"
-            />
-            <line
-              x1="105"
-              y1="207"
-              x2="60"
-              y2="330"
-              stroke="#94a3b8"
-              strokeWidth="2"
-              strokeDasharray="4,4"
-            />
-            <text
-              x="60"
-              y="350"
-              textAnchor="middle"
-              fill="#e2e8f0"
-              fontSize="14"
-              fontWeight="bold"
-            >
-              SONAR
-            </text>
-            <text
-              x="60"
-              y="367"
-              textAnchor="middle"
-              fill="#94a3b8"
-              fontSize="11"
-            >
-              TB-16/TB-29
-            </text>
-          </g>
+          {/* === BALLAST TANK VENTS along hull === */}
+          {[200,300,400,700,800].map((x, i) => (
+            <circle key={i} cx={x} cy={158} r="5" fill="#1e293b" stroke="#475569" strokeWidth="1.5"/>
+          ))}
 
-          {/* PERISCOPE */}
-          <g>
-            <line
-              x1="545"
-              y1="30"
-              x2="480"
-              y2="20"
-              stroke="#94a3b8"
-              strokeWidth="2"
-              strokeDasharray="4,4"
-            />
-            <text
-              x="450"
-              y="18"
-              textAnchor="middle"
-              fill="#e2e8f0"
-              fontSize="14"
-              fontWeight="bold"
-            >
-              PERISCOPE
-            </text>
-          </g>
-
-          {/* RADAR */}
-          <g>
-            <line
-              x1="615"
-              y1="35"
-              x2="720"
-              y2="20"
-              stroke="#94a3b8"
-              strokeWidth="2"
-              strokeDasharray="4,4"
-            />
-            <text
-              x="750"
-              y="18"
-              textAnchor="middle"
-              fill="#e2e8f0"
-              fontSize="14"
-              fontWeight="bold"
-            >
-              RADAR
-            </text>
-            <text
-              x="750"
-              y="35"
-              textAnchor="middle"
-              fill="#94a3b8"
-              fontSize="11"
-            >
-              BPS-16
-            </text>
-          </g>
-
-          {/* NAVIGATION */}
-          <g>
-            <line
-              x1="580"
-              y1="100"
-              x2="620"
-              y2="50"
-              stroke="#94a3b8"
-              strokeWidth="2"
-              strokeDasharray="4,4"
-            />
-            <text
-              x="650"
-              y="48"
-              textAnchor="start"
-              fill="#e2e8f0"
-              fontSize="14"
-              fontWeight="bold"
-            >
-              NAVIGATION
-            </text>
-            <text
-              x="650"
-              y="65"
-              textAnchor="start"
-              fill="#94a3b8"
-              fontSize="11"
-            >
-              Inertial Nav
-            </text>
-          </g>
-
-          {/* ELECTRICAL */}
-          <g>
-            <rect
-              x="430"
-              y="185"
-              width="60"
-              height="40"
-              rx="5"
-              fill={
-                tasks.some((t) => {
-                  const isActive =
-                    t.startDay <= viewDays && t.startDay + t.duration > 1;
-                  return isActive && t.requirements.electrical === "shutdown";
-                })
-                  ? "#ef4444"
-                  : "#22c55e"
-              }
-              stroke="#fff"
-              strokeWidth="2.5"
-            />
-            <line
-              x1="460"
-              y1="185"
-              x2="380"
-              y2="100"
-              stroke="#94a3b8"
-              strokeWidth="2"
-              strokeDasharray="4,4"
-            />
-            <text
-              x="380"
-              y="85"
-              textAnchor="middle"
-              fill="#e2e8f0"
-              fontSize="14"
-              fontWeight="bold"
-            >
-              ELECTRICAL
-            </text>
-            <text
-              x="380"
-              y="102"
-              textAnchor="middle"
-              fill="#94a3b8"
-              fontSize="11"
-            >
-              Main Distribution
-            </text>
-          </g>
-
-          {/* BALLAST/AIR */}
-          <g>
-            <circle
-              cx="340"
-              cy="200"
-              r="30"
-              fill={
-                tasks.some((t) => {
-                  const isActive =
-                    t.startDay <= viewDays && t.startDay + t.duration > 1;
-                  return isActive && t.requirements.air === "shutdown";
-                })
-                  ? "#ef4444"
-                  : "#22c55e"
-              }
-              stroke="#fff"
-              strokeWidth="2.5"
-              opacity="0.9"
-            />
-            <line
-              x1="340"
-              y1="230"
-              x2="280"
-              y2="340"
-              stroke="#94a3b8"
-              strokeWidth="2"
-              strokeDasharray="4,4"
-            />
-            <text
-              x="280"
-              y="355"
-              textAnchor="middle"
-              fill="#e2e8f0"
-              fontSize="14"
-              fontWeight="bold"
-            >
-              BALLAST
-            </text>
-            <text
-              x="280"
-              y="372"
-              textAnchor="middle"
-              fill="#94a3b8"
-              fontSize="11"
-            >
-              Emergency Blow
-            </text>
-          </g>
-
-          {/* HYDRAULICS */}
-          <g>
-            <rect
-              x="1000"
-              y="155"
-              width="40"
-              height="20"
-              rx="3"
-              fill={
-                tasks.some((t) => {
-                  const isActive =
-                    t.startDay <= viewDays && t.startDay + t.duration > 1;
-                  return isActive && t.requirements.hydraulics === "shutdown";
-                })
-                  ? "#ef4444"
-                  : "#22c55e"
-              }
-              stroke="#fff"
-              strokeWidth="2.5"
-            />
-            <line
-              x1="1020"
-              y1="155"
-              x2="950"
-              y2="60"
-              stroke="#94a3b8"
-              strokeWidth="2"
-              strokeDasharray="4,4"
-            />
-            <text
-              x="950"
-              y="45"
-              textAnchor="middle"
-              fill="#e2e8f0"
-              fontSize="14"
-              fontWeight="bold"
-            >
-              HYDRAULICS
-            </text>
-            <text
-              x="950"
-              y="62"
-              textAnchor="middle"
-              fill="#94a3b8"
-              fontSize="11"
-            >
-              Control Surfaces
-            </text>
-          </g>
-
-          {/* REACTOR */}
-          <g>
-            <rect
-              x="730"
-              y="175"
-              width="90"
-              height="50"
-              rx="8"
-              fill={
-                tasks.some((t) => {
-                  const isActive =
-                    t.startDay <= viewDays && t.startDay + t.duration > 1;
-                  return isActive && t.requirements.reactor === "shutdown";
-                })
-                  ? "#ef4444"
-                  : "#22c55e"
-              }
-              stroke="#fff"
-              strokeWidth="2.5"
-            />
-            <line
-              x1="775"
-              y1="225"
-              x2="820"
-              y2="340"
-              stroke="#94a3b8"
-              strokeWidth="2"
-              strokeDasharray="4,4"
-            />
-            <text
-              x="820"
-              y="355"
-              textAnchor="middle"
-              fill="#e2e8f0"
-              fontSize="14"
-              fontWeight="bold"
-            >
-              REACTOR
-            </text>
-            <text
-              x="820"
-              y="372"
-              textAnchor="middle"
-              fill="#94a3b8"
-              fontSize="11"
-            >
-              S6W PWR
-            </text>
-          </g>
-
-          {/* COMMS */}
-          <g>
-            <line
-              x1="580"
-              y1="200"
-              x2="580"
-              y2="340"
-              stroke="#94a3b8"
-              strokeWidth="2"
-              strokeDasharray="4,4"
-            />
-            <text
-              x="580"
-              y="355"
-              textAnchor="middle"
-              fill="#e2e8f0"
-              fontSize="14"
-              fontWeight="bold"
-            >
-              COMMS
-            </text>
-            <text
-              x="580"
-              y="372"
-              textAnchor="middle"
-              fill="#94a3b8"
-              fontSize="11"
-            >
-              Internal/External
-            </text>
-          </g>
-
-          {/* PROPULSION */}
-          <g>
-            <line
-              x1="1145"
-              y1="228"
-              x2="1145"
-              y2="340"
-              stroke="#94a3b8"
-              strokeWidth="2"
-              strokeDasharray="4,4"
-            />
-            <text
-              x="1145"
-              y="355"
-              textAnchor="middle"
-              fill="#e2e8f0"
-              fontSize="14"
-              fontWeight="bold"
-            >
-              PROPULSION
-            </text>
-            <text
-              x="1145"
-              y="372"
-              textAnchor="middle"
-              fill="#94a3b8"
-              fontSize="11"
-            >
-              Pump Jet Drive
-            </text>
-          </g>
+          {/* === LABEL: ship name === */}
+          <text x="545" y="252" textAnchor="middle" fill="#64748b" fontSize="11" fontFamily="monospace" letterSpacing="3" fontWeight="bold">
+            U.S.S. ROCINANTE (SSN-774)
+          </text>
         </svg>
+      </div>
 
-        {/* Legend */}
-        <div className="flex items-center justify-center gap-6 mt-6 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-green-500 rounded border-2 border-white"></div>
-            <span className="text-gray-300">Operational</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-red-500 rounded border-2 border-white"></div>
-            <span className="text-gray-300">Out of Commission</span>
-          </div>
-        </div>
+      {/* System Status Grid */}
+      <div className="grid grid-cols-5 gap-2">
+        {SYSTEMS.map(({ key, label, sub, check }) => {
+          const down = isShutdown(check);
+          return (
+            <div
+              key={key}
+              className={`rounded-lg p-2 text-center border transition ${
+                down
+                  ? "bg-red-500/10 border-red-500/40"
+                  : "bg-green-500/10 border-green-500/30"
+              }`}
+            >
+              <div
+                className={`w-3 h-3 rounded-full mx-auto mb-1.5 ${
+                  down ? "bg-red-500 shadow-[0_0_6px_#ef4444]" : "bg-green-500 shadow-[0_0_6px_#22c55e]"
+                }`}
+              />
+              <div className={`text-[10px] font-bold tracking-wider ${down ? "text-red-400" : "text-green-400"}`}>
+                {label}
+              </div>
+              <div className="text-[9px] text-gray-500 mt-0.5 truncate">{sub}</div>
+              <div className={`text-[9px] font-semibold mt-1 ${down ? "text-red-400" : "text-green-500"}`}>
+                {down ? "MAINT" : "OPER"}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

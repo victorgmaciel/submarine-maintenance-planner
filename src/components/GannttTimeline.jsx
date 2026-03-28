@@ -1,5 +1,6 @@
-import React from "react";
 import { Calendar, Filter, X, AlertTriangle, Users } from "lucide-react";
+
+const DAY_LABELS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
 const GanttTimeline = ({
   filteredTasks,
@@ -13,190 +14,189 @@ const GanttTimeline = ({
   getConflictColor,
   deleteTask,
 }) => {
+  const startDayOfWeek = 1;
+  const getDayOfWeek = (day) => (startDayOfWeek + day - 1) % 7;
+  const isWeekend = (day) => { const d = getDayOfWeek(day); return d === 0 || d === 6; };
+  const weeks = Math.ceil(viewDays / 7);
+
   return (
-    <div className="bg-slate-800 rounded-lg shadow-lg border border-slate-700">
-      <div className="p-4 border-b border-slate-700">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-blue-400" />
-            Timeline View
-          </h2>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-gray-400" />
-              <select
-                value={selectedDivision}
-                onChange={(e) => setSelectedDivision(e.target.value)}
-                className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm"
+    <div className="bg-slate-800 rounded-lg border border-slate-700 shadow-lg overflow-hidden">
+      {/* Header Controls */}
+      <div className="px-4 py-3 border-b border-slate-700 flex items-center justify-between gap-4">
+        <h2 className="text-base font-bold text-white flex items-center gap-2 shrink-0">
+          <Calendar className="w-4 h-4 text-blue-400" />
+          Mission Timeline
+        </h2>
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Filter className="w-3.5 h-3.5 text-gray-400" />
+            <select
+              value={selectedDivision}
+              onChange={(e) => setSelectedDivision(e.target.value)}
+              className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-gray-200 outline-none"
+            >
+              <option>All</option>
+              {divisions.map((div) => <option key={div}>{div}</option>)}
+            </select>
+          </div>
+          <div className="flex items-center gap-1 bg-slate-700 border border-slate-600 rounded-lg overflow-hidden">
+            {[14, 21, 30, 60].map((d) => (
+              <button
+                key={d}
+                onClick={() => setViewDays(d)}
+                className={`px-3 py-1.5 text-xs font-medium transition border-r border-slate-600 last:border-0 ${
+                  viewDays === d
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-400 hover:text-gray-200 hover:bg-slate-600"
+                }`}
               >
-                <option>All</option>
-                {divisions.map((div) => (
-                  <option key={div}>{div}</option>
-                ))}
-              </select>
-            </div>
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-gray-400">Days:</label>
-              <input
-                type="number"
-                value={viewDays}
-                onChange={(e) =>
-                  setViewDays(Math.max(10, parseInt(e.target.value) || 30))
-                }
-                className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 w-20 text-sm"
-              />
-            </div>
+                {d}d
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
-      <div className="p-4 overflow-x-auto">
-        {/* Timeline Header */}
-        <div className="flex border-b-2 border-slate-600 pb-3 mb-4">
-          <div className="w-80 font-semibold text-sm text-gray-300 flex items-end">
-            Evolution Details
-          </div>
-          <div className="flex-1 flex flex-col">
-            {/* Week markers */}
-            <div className="flex mb-1">
-              {[...Array(Math.ceil(viewDays / 7))]
-                .map((_, i) => (
-                  <div
-                    key={i}
-                    className="text-center text-xs font-bold text-blue-400 border-l-2 border-slate-600 px-2"
-                  >
-                    Week {i + 1}
-                  </div>
-                ))
-                .concat(<div key="remaining" className="flex-1"></div>)}
+      <div className="overflow-x-auto">
+        <div style={{ minWidth: `${Math.max(900, viewDays * 28 + 280)}px` }}>
+          {/* Calendar Header */}
+          <div className="flex border-b border-slate-700 bg-slate-900/30">
+            <div className="w-72 shrink-0 px-3 py-2 border-r border-slate-700">
+              <span className="text-xs text-gray-500 uppercase tracking-wider">Evolution / Division</span>
             </div>
-            {/* Day numbers */}
-            <div className="flex">
-              {[...Array(viewDays)].map((_, i) => {
-                const isWeekStart = i % 7 === 0;
-                const isWeekend = i % 7 === 5 || i % 7 === 6;
-                return (
-                  <div
-                    key={i}
-                    className={`flex-1 text-center text-xs border-l ${
-                      isWeekStart
-                        ? "border-slate-600 border-l-2"
-                        : "border-slate-700/30"
-                    } ${
-                      isWeekend ? "text-yellow-400" : "text-gray-400"
-                    } font-medium`}
-                  >
-                    {i + 1}
-                  </div>
-                );
-              })}
+            <div className="flex-1 flex flex-col">
+              {/* Week row */}
+              <div className="flex border-b border-slate-700/60">
+                {[...Array(weeks)].map((_, wi) => {
+                  const weekStart = wi * 7 + 1;
+                  const weekEnd = Math.min(weekStart + 6, viewDays);
+                  const width = ((weekEnd - weekStart + 1) / viewDays) * 100;
+                  return (
+                    <div
+                      key={wi}
+                      className="border-r border-slate-700 text-center py-1 text-xs font-bold text-blue-400 uppercase tracking-widest"
+                      style={{ width: `${width}%` }}
+                    >
+                      WK {wi + 1}
+                    </div>
+                  );
+                })}
+              </div>
+              {/* Day row */}
+              <div className="flex">
+                {[...Array(viewDays)].map((_, i) => {
+                  const day = i + 1;
+                  const dow = getDayOfWeek(day);
+                  const weekend = isWeekend(day);
+                  return (
+                    <div
+                      key={i}
+                      className={`flex-1 text-center py-1 border-r border-slate-700/30 last:border-0 flex flex-col items-center gap-0.5 ${weekend ? "bg-slate-700/20" : ""}`}
+                    >
+                      <span className={`text-[9px] font-medium ${weekend ? "text-gray-500" : "text-gray-600"}`}>
+                        {DAY_LABELS[dow]}
+                      </span>
+                      <span className={`text-[10px] font-bold ${weekend ? "text-yellow-500/60" : "text-gray-500"}`}>
+                        {day}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Timeline Rows */}
-        <div className="space-y-2">
-          {filteredTasks.map((task) => {
-            const conflicts = getTaskConflicts(task.id);
-            const barColor = getConflictColor(task);
-            const divColors = divisionColors[task.division];
-            const leftPercent = ((task.startDay - 1) / viewDays) * 100;
-            const widthPercent = (task.duration / viewDays) * 100;
+          {/* Task rows */}
+          <div className="divide-y divide-slate-700/40">
+            {filteredTasks.map((task) => {
+              const conflicts = getTaskConflicts(task.id);
+              const barColor = getConflictColor(task);
+              const divColors = divisionColors[task.division];
+              const leftPct = ((task.startDay - 1) / viewDays) * 100;
+              const widthPct = Math.max((task.duration / viewDays) * 100, 0.5);
+              const isLong = task.duration >= 5;
 
-            return (
-              <div
-                key={task.id}
-                className="flex items-center group hover:bg-slate-700/40 rounded-lg transition px-2 py-1"
-              >
-                <div
-                  className={`w-80 pr-4 ${divColors.bg} border-l-4 ${divColors.border} pl-3 py-3 rounded-lg shadow-sm`}
-                >
-                  <div className="flex items-center justify-between gap-2">
+              return (
+                <div key={task.id} className="flex items-stretch group hover:bg-slate-700/30 transition">
+                  <div className={`w-72 shrink-0 border-r border-slate-700/50 ${divColors.bg} border-l-4 ${divColors.border} pl-3 pr-3 py-2.5 flex items-center justify-between gap-2`}>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-semibold truncate text-white">
-                        {task.name}
+                      <div className="text-sm font-semibold text-white truncate">{task.name}</div>
+                      <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                        <span className={`text-xs font-bold ${divColors.text}`}>{task.division}</span>
+                        <span className="text-gray-500 text-xs">·</span>
+                        <span className="text-gray-400 text-xs">{task.system}</span>
                       </div>
-                      <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                        <span
-                          className={`${divColors.text} font-bold text-xs px-2 py-0.5 rounded ${divColors.bg} border ${divColors.border}`}
-                        >
-                          {task.division}
-                        </span>
-                        <span className="text-xs text-gray-400">
-                          {task.system}
-                        </span>
-                        <span className="text-xs text-gray-500">•</span>
-                        <span className="text-xs text-gray-400">
-                          Day {task.startDay}-
-                          {task.startDay + task.duration - 1}
-                        </span>
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {task.createdBy}
-                      </div>
+                      <div className="text-gray-500 text-xs mt-0.5 truncate">{task.createdBy}</div>
                     </div>
                     <button
                       onClick={() => deleteTask(task.id)}
-                      className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 hover:bg-red-500/20 p-1.5 rounded transition"
+                      className="opacity-0 group-hover:opacity-100 shrink-0 text-red-400 hover:text-red-300 hover:bg-red-500/20 p-1 rounded transition"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="w-3.5 h-3.5" />
                     </button>
                   </div>
-                </div>
-                <div className="flex-1 relative h-16 bg-slate-900/50 rounded-lg border border-slate-700/50">
-                  {/* Week dividers */}
-                  {[...Array(Math.ceil(viewDays / 7))].map((_, i) => (
+
+                  <div className="flex-1 relative py-2" style={{ minHeight: "52px" }}>
+                    {/* Weekend shading */}
+                    {[...Array(viewDays)].map((_, i) => {
+                      if (!isWeekend(i + 1)) return null;
+                      return (
+                        <div
+                          key={i}
+                          className="absolute top-0 bottom-0 bg-slate-700/20"
+                          style={{ left: `${(i / viewDays) * 100}%`, width: `${(1 / viewDays) * 100}%` }}
+                        />
+                      );
+                    })}
+                    {/* Week dividers */}
+                    {[...Array(weeks)].map((_, wi) => (
+                      <div
+                        key={wi}
+                        className="absolute top-0 bottom-0 border-l border-slate-700/40"
+                        style={{ left: `${((wi * 7) / viewDays) * 100}%` }}
+                      />
+                    ))}
+                    {/* Task bar */}
                     <div
-                      key={i}
-                      className="absolute top-0 bottom-0 border-l border-slate-600/50"
-                      style={{ left: `${((i * 7) / viewDays) * 100}%` }}
-                    />
-                  ))}
-                  {/* Task bar */}
-                  <div
-                    className={`absolute h-full ${barColor} rounded-lg flex items-center justify-between px-3 text-xs font-bold cursor-pointer hover:opacity-90 transition shadow-lg border-2 ${
-                      conflicts.length > 0
-                        ? "border-white/30 animate-pulse"
-                        : "border-white/10"
-                    }`}
-                    style={{
-                      left: `${leftPercent}%`,
-                      width: `${widthPercent}%`,
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      height: "75%",
-                    }}
-                    title={`${task.name}\nDays ${task.startDay} - ${
-                      task.startDay + task.duration - 1
-                    }\n${task.requirements.crew} crew\n${
-                      conflicts.length > 0 ? "HAS CONFLICTS!" : "No conflicts"
-                    }`}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      {conflicts.length > 0 && (
-                        <AlertTriangle className="w-4 h-4 animate-pulse" />
+                      className={`absolute rounded flex items-center justify-between px-2 text-xs font-bold cursor-default shadow-sm ${barColor} ${
+                        conflicts.length > 0 ? "ring-1 ring-red-400/60" : ""
+                      }`}
+                      style={{
+                        left: `${leftPct}%`,
+                        width: `${widthPct}%`,
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        height: "65%",
+                        minWidth: "4px",
+                      }}
+                      title={`${task.name}\nDays ${task.startDay}–${task.startDay + task.duration - 1} (${task.duration}d)\n${task.requirements.crew} crew${conflicts.length > 0 ? "\n⚠ HAS CONFLICTS" : ""}`}
+                    >
+                      {isLong && (
+                        <>
+                          <div className="flex items-center gap-1 overflow-hidden">
+                            {conflicts.length > 0 && <AlertTriangle className="w-3 h-3 shrink-0" />}
+                            <span className="truncate opacity-90">{task.duration}d</span>
+                          </div>
+                          <div className="flex items-center gap-0.5 shrink-0">
+                            <Users className="w-2.5 h-2.5" />
+                            <span>{task.requirements.crew}</span>
+                          </div>
+                        </>
                       )}
-                      <span className="truncate">{task.duration} days</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Users className="w-3 h-3" />
-                      <span>{task.requirements.crew}</span>
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {filteredTasks.length === 0 && (
-          <div className="text-center py-16 text-gray-500">
-            <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p className="text-lg">
-              No evolutions scheduled for {selectedDivision}
-            </p>
+              );
+            })}
           </div>
-        )}
+
+          {filteredTasks.length === 0 && (
+            <div className="text-center py-14 text-gray-500">
+              <Calendar className="w-10 h-10 mx-auto mb-3 opacity-30" />
+              <p className="text-sm text-gray-400">No evolutions scheduled{selectedDivision !== "All" ? ` for ${selectedDivision}` : ""}</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
