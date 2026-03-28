@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Wrench, Plus, LogOut, ChevronDown, Ship, LayoutDashboard, Users, Anchor, Phone, MessageCircle } from "lucide-react";
+import { Wrench, Plus, LogOut, ChevronDown, Ship, LayoutDashboard, Users, Anchor, Phone, MessageCircle, Users2, BarChart2 } from "lucide-react";
 
 // Inline SVG icon for attack submarines
 const SubIcon = ({ className }) => (
@@ -33,6 +33,8 @@ const Header = ({
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "divisions", label: "Division Tracker", icon: Users },
     { id: "contacts", label: "Shore Services", icon: Phone },
+    { id: "manning", label: "Manning", icon: Users2 },
+    { id: "metrics", label: "Metrics", icon: BarChart2 },
   ];
 
   return (

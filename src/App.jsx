@@ -7,21 +7,28 @@ import DailyWatchBill from "./components/DailyWatchBill";
 import DivisionStats from "./components/DivisionStats";
 import SubmarineSystemDiagram from "./components/SubmarineSystemDiagram";
 import ConflictList from "./components/ConflictList";
+import BaseWideConflicts from "./components/BaseWideConflicts";
 import GanttTimeline from "./components/GannttTimeline";
 import AddTaskModal from "./components/AddTaskModal";
 import DivisionTracker from "./components/DivisionTracker";
 import OfficerBriefing from "./components/OfficerBriefing";
 import ShipmateChat from "./components/ShipmateChat";
 import ShoreServices from "./components/ShoreServices";
+import QuickStats from "./components/QuickStats";
+import ManningBoard from "./components/ManningBoard";
+import MetricsDashboard from "./components/MetricsDashboard";
 
 // Import data
 import { users } from "./data/users";
 import { vesselData } from "./data/vesselData";
+import { sailorData } from "./data/sailorData";
 import {
   divisions,
   resources,
   divisionColors,
   vessels,
+  TASK_STATUSES,
+  TASK_PRIORITIES,
 } from "./data/constants";
 
 // Import utilities
@@ -29,6 +36,7 @@ import {
   detectConflicts,
   getTaskConflicts,
   getConflictColor,
+  detectBaseWideConflicts,
 } from "./utils/conflictDetection";
 
 const SubmarineMaintenancePlanner = () => {
@@ -49,6 +57,10 @@ const SubmarineMaintenancePlanner = () => {
     duration: 1,
     system: "General",
     division: "A-Div",
+    status: "scheduled",
+    priority: "routine",
+    dependsOn: [],
+    parts: [],
     requirements: {
       hydraulics: "none",
       electrical: "none",
@@ -68,6 +80,7 @@ const SubmarineMaintenancePlanner = () => {
   const vesselId = selectedVessel?.id;
   const tasks = allVesselTasks[vesselId] ?? [];
   const watchInfo = vesselData[vesselId]?.watchInfo ?? {};
+  const sailors = sailorData[vesselId] ?? [];
 
   // Authentication handlers
   const handleLogin = () => {
@@ -114,6 +127,10 @@ const SubmarineMaintenancePlanner = () => {
         duration: 1,
         system: "General",
         division: currentUser.division,
+        status: "scheduled",
+        priority: "routine",
+        dependsOn: [],
+        parts: [],
         requirements: {
           hydraulics: "none",
           electrical: "none",
@@ -141,6 +158,11 @@ const SubmarineMaintenancePlanner = () => {
     if (selectedDivision === "All") return tasks;
     return tasks.filter((t) => t.division === selectedDivision);
   }, [tasks, selectedDivision]);
+
+  const crossVesselConflicts = useMemo(
+    () => detectBaseWideConflicts(allVesselTasks, vessels),
+    [allVesselTasks]
+  );
 
   // Wrapper functions for conflict utilities
   const getTaskConflictsWrapper = (taskId) =>
@@ -196,9 +218,11 @@ const SubmarineMaintenancePlanner = () => {
             />
 
             {/* System Status and Conflicts */}
-            <div className="mb-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="mb-4 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-5 gap-4">
               <SubmarineSystemDiagram tasks={tasks} viewDays={viewDays} />
               <ConflictList conflicts={conflicts} tasks={tasks} />
+              <BaseWideConflicts crossVesselConflicts={crossVesselConflicts} />
+              <QuickStats tasks={tasks} currentDay={currentDay} />
             </div>
 
             <GanttTimeline
@@ -212,6 +236,8 @@ const SubmarineMaintenancePlanner = () => {
               getTaskConflicts={getTaskConflictsWrapper}
               getConflictColor={getConflictColorWrapper}
               deleteTask={deleteTask}
+              selectedVessel={selectedVessel}
+              allTasks={tasks}
             />
           </>
         )}
@@ -229,6 +255,26 @@ const SubmarineMaintenancePlanner = () => {
 
         {activeTab === "contacts" && <ShoreServices />}
 
+        {activeTab === "manning" && (
+          <ManningBoard
+            sailors={sailors}
+            tasks={tasks}
+            divisions={divisions}
+            divisionColors={divisionColors}
+            currentDay={currentDay}
+          />
+        )}
+
+        {activeTab === "metrics" && (
+          <MetricsDashboard
+            allVesselTasks={allVesselTasks}
+            vessels={vessels}
+            divisions={divisions}
+            divisionColors={divisionColors}
+            selectedVessel={selectedVessel}
+          />
+        )}
+
         <AddTaskModal
           showAddTask={showAddTask}
           setShowAddTask={setShowAddTask}
@@ -238,6 +284,9 @@ const SubmarineMaintenancePlanner = () => {
           divisions={divisions}
           resources={resources}
           addTask={addTask}
+          allTasks={tasks}
+          TASK_STATUSES={TASK_STATUSES}
+          TASK_PRIORITIES={TASK_PRIORITIES}
         />
 
         {shipmateOpen && (

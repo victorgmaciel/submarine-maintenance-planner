@@ -1,10 +1,10 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Users, Clock, AlertTriangle, CheckCircle, Activity, ChevronDown, ChevronUp } from "lucide-react";
 
 const statusConfig = {
-  heavy:   { label: "Heavy Workload", color: "text-red-400",    bg: "bg-red-500/20",    border: "border-red-500/40",    icon: AlertTriangle },
-  active:  { label: "Active",         color: "text-yellow-400", bg: "bg-yellow-500/20", border: "border-yellow-500/40", icon: Activity },
-  standby: { label: "Standby",        color: "text-green-400",  bg: "bg-green-500/20",  border: "border-green-500/40",  icon: CheckCircle },
+  heavy: { label: "Heavy Workload", color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/30", icon: AlertTriangle },
+  active: { label: "Active", color: "text-yellow-400", bg: "bg-yellow-500/10", border: "border-yellow-500/30", icon: Activity },
+  standby: { label: "Standby", color: "text-green-400", bg: "bg-green-500/10", border: "border-green-500/30", icon: CheckCircle },
 };
 
 const getDivisionStatus = (activeTasks, totalCrew) => {
@@ -20,9 +20,11 @@ const DivisionCard = ({ division, tasks, divisionColors, currentDay }) => {
   const activeTasks = tasks.filter(
     (t) => t.division === division && currentDay >= t.startDay && currentDay < t.startDay + t.duration
   );
+
   const upcomingTasks = tasks.filter(
     (t) => t.division === division && t.startDay > currentDay && t.startDay <= currentDay + 5
   );
+
   const completedTasks = tasks.filter(
     (t) => t.division === division && currentDay >= t.startDay + t.duration
   );
@@ -45,12 +47,17 @@ const DivisionCard = ({ division, tasks, divisionColors, currentDay }) => {
         </div>
         <div className="flex items-center gap-4 text-sm text-gray-400">
           <span className="flex items-center gap-1">
-            <Users className="w-3.5 h-3.5" />{totalCrew} crew
+            <Users className="w-3.5 h-3.5" />
+            {totalCrew} crew
           </span>
           <span className="flex items-center gap-1">
-            <Activity className="w-3.5 h-3.5" />{activeTasks.length} active
+            <Activity className="w-3.5 h-3.5" />
+            {activeTasks.length} active
           </span>
-          <button onClick={() => setExpanded(!expanded)} className="text-gray-500 hover:text-gray-300 transition">
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="text-gray-500 hover:text-gray-300 transition"
+          >
             {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
         </div>
@@ -69,7 +76,8 @@ const DivisionCard = ({ division, tasks, divisionColors, currentDay }) => {
                 <div className="flex items-start justify-between gap-2 mb-1.5">
                   <span className="text-sm text-white font-medium leading-tight">{task.name}</span>
                   <span className="text-xs text-gray-400 whitespace-nowrap flex items-center gap-1 shrink-0">
-                    <Clock className="w-3 h-3" />{daysLeft}d left
+                    <Clock className="w-3 h-3" />
+                    {daysLeft}d left
                   </span>
                 </div>
                 <div className="flex items-center gap-2 mb-1.5">
@@ -80,7 +88,10 @@ const DivisionCard = ({ division, tasks, divisionColors, currentDay }) => {
                   <span className="text-xs text-gray-500">by {task.createdBy}</span>
                 </div>
                 <div className="w-full bg-slate-600 rounded-full h-1">
-                  <div className={`h-1 rounded-full ${colors.bar}`} style={{ width: `${Math.min(progress, 100)}%` }} />
+                  <div
+                    className={`h-1 rounded-full ${colors.bar}`}
+                    style={{ width: `${Math.min(progress, 100)}%` }}
+                  />
                 </div>
                 <div className="flex justify-between mt-0.5">
                   <span className="text-xs text-gray-600">Progress</span>
@@ -113,9 +124,11 @@ const DivisionCard = ({ division, tasks, divisionColors, currentDay }) => {
               <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Completed</p>
               <div className="space-y-1">
                 {completedTasks.map((task) => (
-                  <div key={task.id} className="flex items-center justify-between text-sm text-gray-600">
-                    <span className="line-through">{task.name}</span>
-                    <CheckCircle className="w-3.5 h-3.5 text-green-600" />
+                  <div key={task.id} className="flex items-center justify-between text-sm text-gray-600 line-through">
+                    <span>{task.name}</span>
+                    <span className="text-xs no-underline" style={{ textDecoration: "none" }}>
+                      <CheckCircle className="w-3.5 h-3.5 text-green-600 inline" />
+                    </span>
                   </div>
                 ))}
               </div>
@@ -134,9 +147,11 @@ const DivisionTracker = ({ divisions, tasks, divisionColors, currentDay, setCurr
   const totalActiveTasks = tasks.filter(
     (t) => currentDay >= t.startDay && currentDay < t.startDay + t.duration
   ).length;
+
   const totalCrew = tasks
     .filter((t) => currentDay >= t.startDay && currentDay < t.startDay + t.duration)
     .reduce((sum, t) => sum + (t.requirements?.crew || 0), 0);
+
   const heavyDivisions = divisions.filter((div) => {
     const active = tasks.filter(
       (t) => t.division === div && currentDay >= t.startDay && currentDay < t.startDay + t.duration
@@ -155,12 +170,16 @@ const DivisionTracker = ({ divisions, tasks, divisionColors, currentDay, setCurr
             <button
               onClick={() => setCurrentDay(Math.max(1, currentDay - 1))}
               className="text-gray-400 hover:text-white bg-slate-700 hover:bg-slate-600 w-6 h-6 rounded flex items-center justify-center text-sm transition"
-            >‹</button>
+            >
+              ‹
+            </button>
             <span className="text-xl font-bold text-white">Day {currentDay}</span>
             <button
               onClick={() => setCurrentDay(Math.min(viewDays, currentDay + 1))}
               className="text-gray-400 hover:text-white bg-slate-700 hover:bg-slate-600 w-6 h-6 rounded flex items-center justify-center text-sm transition"
-            >›</button>
+            >
+              ›
+            </button>
           </div>
         </div>
         <div>
@@ -174,10 +193,11 @@ const DivisionTracker = ({ divisions, tasks, divisionColors, currentDay, setCurr
         <div>
           <p className="text-xs text-gray-500 uppercase tracking-wider">Heavy Workload Divs</p>
           <p className="text-xl font-bold mt-1">
-            {heavyDivisions.length > 0
-              ? <span className="text-red-400">{heavyDivisions.join(", ")}</span>
-              : <span className="text-green-400">None</span>
-            }
+            {heavyDivisions.length > 0 ? (
+              <span className="text-red-400">{heavyDivisions.join(", ")}</span>
+            ) : (
+              <span className="text-green-400">None</span>
+            )}
           </p>
         </div>
       </div>

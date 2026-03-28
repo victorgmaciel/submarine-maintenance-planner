@@ -1,4 +1,6 @@
-import { Calendar, Filter, X, AlertTriangle, Users } from "lucide-react";
+import { Calendar, Filter, X, AlertTriangle, Users, Lock, Package, Download } from "lucide-react";
+import { STATUS_COLORS, PRIORITY_COLORS } from "../data/constants";
+import { exportCSMP } from "../utils/csvExport";
 
 const DAY_LABELS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
@@ -13,11 +15,32 @@ const GanttTimeline = ({
   getTaskConflicts,
   getConflictColor,
   deleteTask,
+  selectedVessel,
+  allTasks,
 }) => {
   const startDayOfWeek = 1;
   const getDayOfWeek = (day) => (startDayOfWeek + day - 1) % 7;
   const isWeekend = (day) => { const d = getDayOfWeek(day); return d === 0 || d === 6; };
   const weeks = Math.ceil(viewDays / 7);
+
+  // Determine bar color based on status first, then conflict/division color
+  const getBarColor = (task) => {
+    const status = task.status ?? "scheduled";
+    if (status === "complete")    return "bg-green-500";
+    if (status === "deferred")    return "bg-amber-500";
+    if (status === "in-progress") return "bg-blue-500";
+    // scheduled — use conflict color (which falls back to division color)
+    return getConflictColor(task);
+  };
+
+  // Check if any dependency is incomplete
+  const hasPendingDeps = (task) => {
+    if (!task.dependsOn?.length || !allTasks) return false;
+    return task.dependsOn.some((depId) => {
+      const dep = allTasks.find((t) => t.id === depId);
+      return dep && dep.status !== "complete";
+    });
+  };
 
   return (
     <div className="bg-slate-800 rounded-lg border border-slate-700 shadow-lg overflow-hidden">
@@ -54,11 +77,19 @@ const GanttTimeline = ({
               </button>
             ))}
           </div>
+          <button
+            onClick={() => exportCSMP(filteredTasks, selectedVessel?.name ?? "vessel")}
+            className="flex items-center gap-1.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 px-3 py-1.5 rounded-lg text-xs font-medium transition"
+            title="Export CSMP as CSV"
+          >
+            <Download className="w-3.5 h-3.5 text-green-400" />
+            CSMP
+          </button>
         </div>
       </div>
 
       <div className="overflow-x-auto">
-        <div style={{ minWidth: `${Math.max(900, viewDays * 28 + 280)}px` }}>
+        <div style={{ minWidth: `${Math.max(900, viewDays * 28 + 288)}px` }}>
           {/* Calendar Header */}
           <div className="flex border-b border-slate-700 bg-slate-900/30">
             <div className="w-72 shrink-0 px-3 py-2 border-r border-slate-700">
@@ -110,15 +141,22 @@ const GanttTimeline = ({
           <div className="divide-y divide-slate-700/40">
             {filteredTasks.map((task) => {
               const conflicts = getTaskConflicts(task.id);
-              const barColor = getConflictColor(task);
-              const divColors = divisionColors[task.division];
+              const barColor = getBarColor(task);
+              const divColors = divisionColors[task.division] ?? divisionColors["A-Div"];
               const leftPct = ((task.startDay - 1) / viewDays) * 100;
               const widthPct = Math.max((task.duration / viewDays) * 100, 0.5);
               const isLong = task.duration >= 5;
+              const status = task.status ?? "scheduled";
+              const priority = task.priority ?? "routine";
+              const statusColors = STATUS_COLORS[status] ?? STATUS_COLORS["scheduled"];
+              const priorityColors = PRIORITY_COLORS[priority] ?? PRIORITY_COLORS["routine"];
+              const pendingDeps = hasPendingDeps(task);
+              const hasParts = task.parts?.length > 0;
+              const hasDepends = task.dependsOn?.length > 0;
 
               return (
                 <div key={task.id} className="flex items-stretch group hover:bg-slate-700/30 transition">
-                  <div className={`w-72 shrink-0 border-r border-slate-700/50 ${divColors.bg} border-l-4 ${divColors.border} pl-3 pr-3 py-2.5 flex items-center justify-between gap-2`}>
+                  <div className={`w-72 shrink-0 border-r border-slate-700/50 ${divColors.bg} border-l-4 ${divColors.border} pl-3 pr-3 py-2 flex items-center justify-between gap-2`}>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-semibold text-white truncate">{task.name}</div>
                       <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
@@ -127,6 +165,27 @@ const GanttTimeline = ({
                         <span className="text-gray-400 text-xs">{task.system}</span>
                       </div>
                       <div className="text-gray-500 text-xs mt-0.5 truncate">{task.createdBy}</div>
+                      {/* Status + Priority + indicator badges */}
+                      <div className="flex items-center gap-1 mt-1 flex-wrap">
+                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${statusColors.bg} ${statusColors.text}`}>
+                          {status}
+                        </span>
+                        {priority !== "routine" && (
+                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${priorityColors.bg} ${priorityColors.text}`}>
+                            {priority}
+                          </span>
+                        )}
+                        {hasDepends && (
+                          <span title={pendingDeps ? "Dependencies pending" : "Dependencies met"}>
+                            <Lock className={`w-3 h-3 ${pendingDeps ? "text-amber-400" : "text-gray-500"}`} />
+                          </span>
+                        )}
+                        {hasParts && (
+                          <span title={`${task.parts.length} part(s)`}>
+                            <Package className="w-3 h-3 text-gray-500" />
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <button
                       onClick={() => deleteTask(task.id)}
@@ -136,7 +195,7 @@ const GanttTimeline = ({
                     </button>
                   </div>
 
-                  <div className="flex-1 relative py-2" style={{ minHeight: "52px" }}>
+                  <div className="flex-1 relative py-2" style={{ minHeight: "60px" }}>
                     {/* Weekend shading */}
                     {[...Array(viewDays)].map((_, i) => {
                       if (!isWeekend(i + 1)) return null;
@@ -160,7 +219,7 @@ const GanttTimeline = ({
                     <div
                       className={`absolute rounded flex items-center justify-between px-2 text-xs font-bold cursor-default shadow-sm ${barColor} ${
                         conflicts.length > 0 ? "ring-1 ring-red-400/60" : ""
-                      }`}
+                      } ${pendingDeps ? "ring-1 ring-amber-400/70" : ""}`}
                       style={{
                         left: `${leftPct}%`,
                         width: `${widthPct}%`,
@@ -169,7 +228,7 @@ const GanttTimeline = ({
                         height: "65%",
                         minWidth: "4px",
                       }}
-                      title={`${task.name}\nDays ${task.startDay}–${task.startDay + task.duration - 1} (${task.duration}d)\n${task.requirements.crew} crew${conflicts.length > 0 ? "\n⚠ HAS CONFLICTS" : ""}`}
+                      title={`${task.name}\nDays ${task.startDay}–${task.startDay + task.duration - 1} (${task.duration}d)\n${task.requirements.crew} crew\nStatus: ${status} | Priority: ${priority}${conflicts.length > 0 ? "\n⚠ HAS CONFLICTS" : ""}${pendingDeps ? "\n🔒 PENDING DEPS" : ""}`}
                     >
                       {isLong && (
                         <>

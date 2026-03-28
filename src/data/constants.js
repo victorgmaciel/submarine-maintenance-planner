@@ -64,6 +64,30 @@ export const vessels = [
   { id: "as39",   name: "USS Emory S. Land",  hull: "AS-39",   type: "Submarine Tender",       pier: "Pier 2 · Berth C", status: "In Port" },
 ];
 
+export const TASK_STATUSES = ["scheduled", "in-progress", "complete", "deferred"];
+export const TASK_PRIORITIES = ["routine", "urgent", "emergency"];
+
+export const SHORE_SHOP_MAP = {
+  hydraulics: "Shop 51",
+  electrical: "Shop 11",
+  reactor: "IMA",
+  weapons: "Shop 64",
+  air: "Shop 31",
+};
+
+export const STATUS_COLORS = {
+  "scheduled":   { bg: "bg-slate-600",  text: "text-gray-300",  bar: "bg-slate-500" },
+  "in-progress": { bg: "bg-blue-600",   text: "text-white",     bar: "bg-blue-500" },
+  "complete":    { bg: "bg-green-600",  text: "text-white",     bar: "bg-green-500" },
+  "deferred":    { bg: "bg-amber-600",  text: "text-white",     bar: "bg-amber-500" },
+};
+
+export const PRIORITY_COLORS = {
+  "routine":    { bg: "bg-slate-700",   text: "text-gray-400" },
+  "urgent":     { bg: "bg-orange-500",  text: "text-white" },
+  "emergency":  { bg: "bg-red-600",     text: "text-white" },
+};
+
 export const dailyWatchInfo = {
   1: { ood: "LTJG Anderson", cob: "ETCSS Martinez", section: "1" },
   2: { ood: "LT Chen", cob: "MMCSS Johnson", section: "2" },

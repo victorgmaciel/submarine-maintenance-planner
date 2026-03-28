@@ -1,3 +1,5 @@
+import { SHORE_SHOP_MAP } from "../data/constants";
+
 export const detectConflicts = (tasks) => {
   const conflicts = [];
 
@@ -66,4 +68,57 @@ export const getConflictColor = (task, conflicts, divisionColors) => {
   if (taskConflicts.some((c) => c.severity === "warning"))
     return "bg-yellow-500";
   return divColors.bar;
+};
+
+export const detectBaseWideConflicts = (allVesselTasks, vessels) => {
+  const conflicts = [];
+  const vesselList = vessels ?? [];
+
+  for (let i = 0; i < vesselList.length; i++) {
+    for (let j = i + 1; j < vesselList.length; j++) {
+      const v1 = vesselList[i];
+      const v2 = vesselList[j];
+      const tasks1 = allVesselTasks[v1.id] ?? [];
+      const tasks2 = allVesselTasks[v2.id] ?? [];
+
+      for (const t1 of tasks1) {
+        for (const t2 of tasks2) {
+          const t1End = t1.startDay + t1.duration - 1;
+          const t2End = t2.startDay + t2.duration - 1;
+          const overlaps = !(t1End < t2.startDay || t2End < t1.startDay);
+          if (!overlaps) continue;
+
+          for (const [key, shopName] of Object.entries(SHORE_SHOP_MAP)) {
+            const r1 = t1.requirements?.[key];
+            const r2 = t2.requirements?.[key];
+            if (
+              (r1 === "required" || r1 === "shutdown") &&
+              (r2 === "required" || r2 === "shutdown")
+            ) {
+              const overlapStart = Math.max(t1.startDay, t2.startDay);
+              const overlapEnd = Math.min(t1End, t2End);
+              const conflictingDays = [];
+              for (let d = overlapStart; d <= overlapEnd; d++) conflictingDays.push(d);
+
+              conflicts.push({
+                vesselId1: v1.id,
+                vesselName1: v1.name,
+                taskId1: t1.id,
+                taskName1: t1.name,
+                vesselId2: v2.id,
+                vesselName2: v2.name,
+                taskId2: t2.id,
+                taskName2: t2.name,
+                sharedShop: shopName,
+                conflictingDays,
+              });
+              break; // one conflict entry per task pair is enough
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return conflicts;
 };
