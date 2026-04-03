@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Wrench, Plus, LogOut, ChevronDown, Ship, LayoutDashboard, Users, Anchor, Phone, MessageCircle, Users2, BarChart2 } from "lucide-react";
+import { Plus, LogOut, ChevronDown, Ship, LayoutDashboard, Users, Anchor, Phone, MessageCircle, Users2, BarChart2, Package, Columns } from "lucide-react";
+import { TritonLockup } from "./TritonLogo";
 
 // Inline SVG icon for attack submarines
 const SubIcon = ({ className }) => (
@@ -32,25 +33,23 @@ const Header = ({
   const tabs = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "divisions", label: "Division Tracker", icon: Users },
+    { id: "parts", label: "Parts & Supply", icon: Package },
     { id: "contacts", label: "Shore Services", icon: Phone },
     { id: "manning", label: "Manning", icon: Users2 },
     { id: "metrics", label: "Metrics", icon: BarChart2 },
+    { id: "kanban",  label: "CHIT Board",  icon: Columns },
   ];
 
   return (
     <div className="mb-6 bg-slate-800 rounded-lg border border-slate-700 shadow-lg">
       {/* Top bar */}
       <div className="px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="bg-blue-500/20 p-2 rounded-lg border border-blue-500/30">
-            <Wrench className="w-6 h-6 text-blue-400" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-white">Submarine Maintenance Planner</h1>
-            <p className="text-gray-400 text-sm">
-              Logged in as {currentUser.name} &bull; {currentUser.division}
-            </p>
-          </div>
+        <div className="flex items-center gap-4">
+          <TritonLockup iconSize={28} />
+          <div className="h-8 w-px bg-slate-700" />
+          <p className="text-gray-400 text-sm">
+            {currentUser.name} &bull; {currentUser.division}
+          </p>
         </div>
 
         <div className="flex items-center gap-3">

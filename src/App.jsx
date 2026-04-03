@@ -1,13 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 
 // Import components
 import LoginScreen from "./components/LoginScreen";
 import Header from "./components/Header";
 import DailyWatchBill from "./components/DailyWatchBill";
-import DivisionStats from "./components/DivisionStats";
 import SubmarineSystemDiagram from "./components/SubmarineSystemDiagram";
 import ConflictList from "./components/ConflictList";
-import BaseWideConflicts from "./components/BaseWideConflicts";
 import GanttTimeline from "./components/GannttTimeline";
 import AddTaskModal from "./components/AddTaskModal";
 import DivisionTracker from "./components/DivisionTracker";
@@ -17,6 +15,21 @@ import ShoreServices from "./components/ShoreServices";
 import QuickStats from "./components/QuickStats";
 import ManningBoard from "./components/ManningBoard";
 import MetricsDashboard from "./components/MetricsDashboard";
+import PartsTracker from "./components/PartsTracker";
+import KanbanBoard from "./components/KanbanBoard";
+
+const DEFAULT_NEW_TASK = {
+  name: "",
+  startDay: 1,
+  duration: 1,
+  system: "General",
+  division: "A-Div",
+  status: "proofed",
+  priority: "routine",
+  dependsOn: [],
+  parts: [],
+  requirements: { hydraulics: "none", electrical: "none", air: "none", crew: 1 },
+};
 
 // Import data
 import { users } from "./data/users";
@@ -39,7 +52,7 @@ import {
   detectBaseWideConflicts,
 } from "./utils/conflictDetection";
 
-const SubmarineMaintenancePlanner = () => {
+const Triton = () => {
   // Authentication state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
@@ -51,23 +64,7 @@ const SubmarineMaintenancePlanner = () => {
   );
   const [showAddTask, setShowAddTask] = useState(false);
   const [selectedDivision, setSelectedDivision] = useState("All");
-  const [newTask, setNewTask] = useState({
-    name: "",
-    startDay: 1,
-    duration: 1,
-    system: "General",
-    division: "A-Div",
-    status: "scheduled",
-    priority: "routine",
-    dependsOn: [],
-    parts: [],
-    requirements: {
-      hydraulics: "none",
-      electrical: "none",
-      air: "none",
-      crew: 1,
-    },
-  });
+  const [newTask, setNewTask] = useState(DEFAULT_NEW_TASK);
 
   // View state
   const [currentDay, setCurrentDay] = useState(1);
@@ -75,12 +72,22 @@ const SubmarineMaintenancePlanner = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [selectedVessel, setSelectedVessel] = useState(vessels[0]);
   const [shipmateOpen, setShipmateOpen] = useState(false);
+  const [allVesselPartsOrders, setAllVesselPartsOrders] = useState({});
 
   // Derived per-vessel data (must come after selectedVessel is declared)
   const vesselId = selectedVessel?.id;
   const tasks = allVesselTasks[vesselId] ?? [];
   const watchInfo = vesselData[vesselId]?.watchInfo ?? {};
   const sailors = sailorData[vesselId] ?? [];
+
+  // Parts order status — keyed by vesselId, then "taskId-partIndex"
+  const partsOrders = allVesselPartsOrders[vesselId] ?? {};
+  const setPartsOrders = (updater) => {
+    setAllVesselPartsOrders((prev) => ({
+      ...prev,
+      [vesselId]: typeof updater === "function" ? updater(prev[vesselId] ?? {}) : updater,
+    }));
+  };
 
   // Authentication handlers
   const handleLogin = () => {
@@ -121,25 +128,15 @@ const SubmarineMaintenancePlanner = () => {
               : currentUser.division,
         },
       ]);
-      setNewTask({
-        name: "",
-        startDay: 1,
-        duration: 1,
-        system: "General",
-        division: currentUser.division,
-        status: "scheduled",
-        priority: "routine",
-        dependsOn: [],
-        parts: [],
-        requirements: {
-          hydraulics: "none",
-          electrical: "none",
-          air: "none",
-          crew: 1,
-        },
-      });
+      setNewTask({ ...DEFAULT_NEW_TASK, division: currentUser.division });
       setShowAddTask(false);
     }
+  };
+
+  const updateTaskStatus = (taskId, newStatus, extraData = {}) => {
+    setVesselTasks((prev) =>
+      prev.map((t) => t.id === taskId ? { ...t, status: newStatus, ...extraData } : t)
+    );
   };
 
   const deleteTask = (id) => {
@@ -164,11 +161,14 @@ const SubmarineMaintenancePlanner = () => {
     [allVesselTasks]
   );
 
-  // Wrapper functions for conflict utilities
-  const getTaskConflictsWrapper = (taskId) =>
-    getTaskConflicts(taskId, conflicts);
-  const getConflictColorWrapper = (task) =>
-    getConflictColor(task, conflicts, divisionColors);
+  const getTaskConflictsWrapper = useCallback(
+    (taskId) => getTaskConflicts(taskId, conflicts),
+    [conflicts]
+  );
+  const getConflictColorWrapper = useCallback(
+    (task) => getConflictColor(task, conflicts, divisionColors),
+    [conflicts]
+  );
 
   // Show login screen if not logged in
   if (!isLoggedIn) {
@@ -211,17 +211,14 @@ const SubmarineMaintenancePlanner = () => {
               getTaskConflicts={getTaskConflictsWrapper}
             />
 
-            <DivisionStats
-              divisions={divisions}
-              divisionColors={divisionColors}
-              tasks={tasks}
-            />
-
             {/* System Status and Conflicts */}
-            <div className="mb-4 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-5 gap-4">
-              <SubmarineSystemDiagram tasks={tasks} viewDays={viewDays} />
+            <div className="mb-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <SubmarineSystemDiagram tasks={tasks} viewDays={viewDays} selectedVessel={selectedVessel} />
               <ConflictList conflicts={conflicts} tasks={tasks} />
-              <BaseWideConflicts crossVesselConflicts={crossVesselConflicts} />
+            </div>
+
+            {/* Parts Needed + Upcoming — full width, side by side */}
+            <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
               <QuickStats tasks={tasks} currentDay={currentDay} />
             </div>
 
@@ -250,10 +247,23 @@ const SubmarineMaintenancePlanner = () => {
             currentDay={currentDay}
             setCurrentDay={setCurrentDay}
             viewDays={viewDays}
+            currentUser={currentUser}
           />
         )}
 
-        {activeTab === "contacts" && <ShoreServices />}
+        {activeTab === "parts" && (
+          <PartsTracker
+            tasks={tasks}
+            partsOrders={partsOrders}
+            setPartsOrders={setPartsOrders}
+            divisions={divisions}
+            divisionColors={divisionColors}
+          />
+        )}
+
+        {activeTab === "contacts" && (
+          <ShoreServices crossVesselConflicts={crossVesselConflicts} />
+        )}
 
         {activeTab === "manning" && (
           <ManningBoard
@@ -262,6 +272,16 @@ const SubmarineMaintenancePlanner = () => {
             divisions={divisions}
             divisionColors={divisionColors}
             currentDay={currentDay}
+          />
+        )}
+
+        {activeTab === "kanban" && (
+          <KanbanBoard
+            tasks={tasks}
+            updateTaskStatus={updateTaskStatus}
+            divisionColors={divisionColors}
+            divisions={divisions}
+            currentUser={currentUser}
           />
         )}
 
@@ -296,9 +316,15 @@ const SubmarineMaintenancePlanner = () => {
             tasks={tasks}
           />
         )}
+
+        <footer className="mt-8 pt-4 border-t border-slate-700/50 flex items-center justify-between text-xs text-gray-600">
+          <span>TRITON &mdash; Naval Maintenance Management System</span>
+          <span>NAVSUBBASE Bangor WA&bull; {selectedVessel.name} ({selectedVessel.hull})</span>
+          <span>UNCLASSIFIED // FOR OFFICIAL USE ONLY &bull; Built by Victr Labs</span>
+        </footer>
       </div>
     </div>
   );
 };
 
-export default SubmarineMaintenancePlanner;
+export default Triton;

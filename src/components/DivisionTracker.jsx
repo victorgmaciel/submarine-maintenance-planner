@@ -143,17 +143,24 @@ const DivisionCard = ({ division, tasks, divisionColors, currentDay }) => {
   );
 };
 
-const DivisionTracker = ({ divisions, tasks, divisionColors, currentDay, setCurrentDay, viewDays }) => {
-  const totalActiveTasks = tasks.filter(
+const DivisionTracker = ({ divisions, tasks, divisionColors, currentDay, setCurrentDay, viewDays, currentUser }) => {
+  // Non-admins only see their own division
+  const visibleDivisions = currentUser?.role === "admin"
+    ? divisions
+    : divisions.filter((d) => d === currentUser?.division);
+
+  const visibleTasks = tasks.filter((t) => visibleDivisions.includes(t.division));
+
+  const totalActiveTasks = visibleTasks.filter(
     (t) => currentDay >= t.startDay && currentDay < t.startDay + t.duration
   ).length;
 
-  const totalCrew = tasks
+  const totalCrew = visibleTasks
     .filter((t) => currentDay >= t.startDay && currentDay < t.startDay + t.duration)
     .reduce((sum, t) => sum + (t.requirements?.crew || 0), 0);
 
-  const heavyDivisions = divisions.filter((div) => {
-    const active = tasks.filter(
+  const heavyDivisions = visibleDivisions.filter((div) => {
+    const active = visibleTasks.filter(
       (t) => t.division === div && currentDay >= t.startDay && currentDay < t.startDay + t.duration
     );
     const crew = active.reduce((s, t) => s + (t.requirements?.crew || 0), 0);
@@ -162,6 +169,14 @@ const DivisionTracker = ({ divisions, tasks, divisionColors, currentDay, setCurr
 
   return (
     <div>
+      {/* Access scope indicator for non-admins */}
+      {currentUser?.role !== "admin" && (
+        <div className="mb-4 flex items-center gap-2 text-xs text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-4 py-2.5">
+          <Users className="w-3.5 h-3.5 shrink-0" />
+          Showing <span className="font-bold">{currentUser?.division}</span> only — contact your admin for full visibility
+        </div>
+      )}
+
       {/* Summary Bar */}
       <div className="mb-4 bg-slate-800 rounded-lg p-4 border border-slate-700 grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div>
@@ -204,7 +219,7 @@ const DivisionTracker = ({ divisions, tasks, divisionColors, currentDay, setCurr
 
       {/* Division Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {divisions.map((div) => (
+        {visibleDivisions.map((div) => (
           <DivisionCard
             key={div}
             division={div}

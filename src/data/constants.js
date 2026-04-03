@@ -54,7 +54,7 @@ export const divisionColors = {
   },
 };
 
-// Vessels moored at Naval Submarine Base New London — Pier 1 & 2
+// Vessels moored at Naval Submarine Base Bangor WA — Pier 1 & 2
 export const vessels = [
   { id: "ssn774", name: "USS Virginia",       hull: "SSN-774", type: "Fast Attack Submarine",  pier: "Pier 1 · Berth A", status: "In Port" },
   { id: "ssn775", name: "USS Texas",          hull: "SSN-775", type: "Fast Attack Submarine",  pier: "Pier 1 · Berth B", status: "In Port" },
@@ -64,7 +64,7 @@ export const vessels = [
   { id: "as39",   name: "USS Emory S. Land",  hull: "AS-39",   type: "Submarine Tender",       pier: "Pier 2 · Berth C", status: "In Port" },
 ];
 
-export const TASK_STATUSES = ["scheduled", "in-progress", "complete", "deferred"];
+export const TASK_STATUSES = ["proofed", "first-check", "second-check", "ready-ood", "in-progress", "done", "deferred"];
 export const TASK_PRIORITIES = ["routine", "urgent", "emergency"];
 
 export const SHORE_SHOP_MAP = {
@@ -76,10 +76,16 @@ export const SHORE_SHOP_MAP = {
 };
 
 export const STATUS_COLORS = {
-  "scheduled":   { bg: "bg-slate-600",  text: "text-gray-300",  bar: "bg-slate-500" },
-  "in-progress": { bg: "bg-blue-600",   text: "text-white",     bar: "bg-blue-500" },
-  "complete":    { bg: "bg-green-600",  text: "text-white",     bar: "bg-green-500" },
-  "deferred":    { bg: "bg-amber-600",  text: "text-white",     bar: "bg-amber-500" },
+  "proofed":      { bg: "bg-slate-600",    text: "text-gray-300",   bar: "bg-slate-500" },
+  "first-check":  { bg: "bg-cyan-700",     text: "text-white",      bar: "bg-cyan-500" },
+  "second-check": { bg: "bg-blue-700",     text: "text-white",      bar: "bg-blue-500" },
+  "ready-ood":    { bg: "bg-purple-700",   text: "text-white",      bar: "bg-purple-500" },
+  "in-progress":  { bg: "bg-yellow-600",   text: "text-white",      bar: "bg-yellow-500" },
+  "done":         { bg: "bg-green-700",    text: "text-white",      bar: "bg-green-500" },
+  "deferred":     { bg: "bg-amber-700",    text: "text-white",      bar: "bg-amber-500" },
+  // legacy aliases
+  "scheduled":    { bg: "bg-slate-600",    text: "text-gray-300",   bar: "bg-slate-500" },
+  "complete":     { bg: "bg-green-700",    text: "text-white",      bar: "bg-green-500" },
 };
 
 export const PRIORITY_COLORS = {

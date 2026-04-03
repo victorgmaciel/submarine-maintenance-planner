@@ -18,7 +18,7 @@ const QuickStats = ({ tasks, currentDay }) => {
   );
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="contents">
       {/* Parts Needed */}
       <div className="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden flex-1">
         <div className="bg-orange-500/20 border-b border-orange-500/40 px-4 py-2.5 flex items-center gap-2">

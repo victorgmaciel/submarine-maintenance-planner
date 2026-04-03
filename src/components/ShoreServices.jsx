@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Phone, User, Clock, ChevronDown, ChevronUp, Wrench, Search } from "lucide-react";
+import { Phone, User, Clock, ChevronDown, ChevronUp, Wrench, Search, AlertTriangle } from "lucide-react";
 import { shoreServices } from "../data/shoreServices";
 
-const ShoreServices = () => {
+const ShoreServices = ({ crossVesselConflicts = [] }) => {
   const [expanded, setExpanded] = useState(null);
   const [search, setSearch] = useState("");
 
@@ -23,7 +23,7 @@ const ShoreServices = () => {
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-white">Shore Support Directory</h2>
-          <p className="text-sm text-gray-400">NAVSUBBASE New London — Intermediate Maintenance Activity &amp; Shops</p>
+          <p className="text-sm text-gray-400">NAVSUBBASE Bangor WA — Intermediate Maintenance Activity &amp; Shops</p>
         </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
@@ -128,6 +128,37 @@ const ShoreServices = () => {
           </div>
         )}
       </div>
+
+      {/* Base-wide scheduling conflicts */}
+      {crossVesselConflicts.length > 0 && (
+        <div className="mt-6">
+          <div className="flex items-center gap-2 mb-3">
+            <AlertTriangle className="w-4 h-4 text-yellow-400" />
+            <h3 className="text-sm font-bold text-white">Base-Wide Shop Conflicts</h3>
+            <span className="text-xs bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 px-2 py-0.5 rounded-full font-bold">
+              {crossVesselConflicts.length}
+            </span>
+          </div>
+          <div className="space-y-2">
+            {crossVesselConflicts.map((c, i) => (
+              <div key={i} className="bg-slate-800 border border-yellow-500/20 rounded-lg px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+                <span className="font-bold text-yellow-400 shrink-0">{c.sharedShop}</span>
+                <span className="text-gray-300">{c.vesselName1}</span>
+                <span className="text-gray-500">·</span>
+                <span className="text-gray-400 truncate max-w-[180px]">{c.taskName1}</span>
+                <span className="text-yellow-600 font-bold">vs</span>
+                <span className="text-gray-300">{c.vesselName2}</span>
+                <span className="text-gray-500">·</span>
+                <span className="text-gray-400 truncate max-w-[180px]">{c.taskName2}</span>
+                <span className="ml-auto shrink-0 text-gray-500">
+                  Days {c.conflictingDays.slice(0, 3).join(", ")}
+                  {c.conflictingDays.length > 3 ? ` +${c.conflictingDays.length - 3}` : ""}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

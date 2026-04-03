@@ -8,9 +8,9 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       manifest: {
-        name: "Submarine Maintenance Planner",
-        short_name: "SubMaint",
-        description: "NAVSUBBASE New London maintenance planning",
+        name: "TRITON",
+        short_name: "TRITON",
+        description: "Naval Maintenance Management System",
         theme_color: "#0f172a",
         background_color: "#0f172a",
         display: "standalone",
